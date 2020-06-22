@@ -1,0 +1,13 @@
+{% extends 'layout.html' %}
+
+{% block body %}
+<div class='mt-3 text-center'>
+    <h1>Blogs</h1>
+    <ul class='list-group text-left'>
+        {% for blog in blogs %}
+            <li class='list-group-item'><a href='/blog/{{blog.id}}'>{{ blog.title }}</a></li>
+        {% endfor %}
+    </ul>
+</div>
+{% endblock %}
+
