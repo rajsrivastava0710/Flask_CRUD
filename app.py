@@ -57,9 +57,28 @@ class RegisterForm(Form):
 def signup():
     form = RegisterForm(request.form)
     if request.method == 'POST' and form.validate():
+        name = form.name.data
+        email = form.email.data
+        username = form.username.data
+        password = sha256_crypt.encrypt(str(form.password.data))
+
+        # Create Cursor
+        curr = mysql.connection.cursor()
+
+        #Execute
+        curr.execute("INSERT INTO users(name, email, username, password) VALUES(%s, %s, %s, %s)",(name, email, username, password))
+
+        #Commit
+        mysql.connection.commit()
+
+        #Close Connection
+        curr.close()
+
+        flash('You are now registered, Login Now!','success')
+
+        return redirect(url_for('login'))
         
-        return
     return render_template('signup.html', form=form)
 
-if __name__ == ' __main__':
-    app.run()
+app.secret_key = 'efew_5%&^8ndF4Q8z\c]/'
+app.run(debug=True)
