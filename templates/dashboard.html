@@ -2,9 +2,32 @@
 
 {% block body %}
     
-<div class="text-center mt-3">
+<div class="text-center mt-3 jumbotron">
     <h1>Dashbaord</h1>
     <div>Welcome {{session.username}}</div>
+    <a href='/dashboard/newblog' class='btn btn-primary mt-2'>Add A Blog</a>
 </div>
+<hr>
+<table class='table table-striped'>
+    <tr>
+        <th>ID</th>
+        <th>Title</th>
+        <th>Author</th>
+        <th>Date</th>
+        <th></th>
+        <th></th>
+    </tr>
+    {% for blog in blogs %} 
+        <tr>
+            <td>{{ blog.id }}</td>
+            <td><a href='/blog/{{blog.id}}'>{{ blog.title }}</a></td>
+            <td>{{ blog.author }}</td>
+            <td>{{ blog.create_date }}</td>
+            <td><a class='btn btn-primary' href='/blog/{{blog.id}}/edit'>Update</a></td>
+            <td><a class='btn btn-danger' href='/blog/{{blog.id}}/delete'>Delete</a></td>
+        </tr>
+    {% endfor %}
+</table>
+
 
 {% endblock %}

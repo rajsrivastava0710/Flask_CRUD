@@ -4,6 +4,10 @@
     
 <div class="jumbotron text-center mt-3">
     <h1>Welcome to Flask App</h1>
+    <p class='mt-4'>This is my first CRUD application using Flask framework. It is a simple blog application using MySQL as the dataabse.</p>
+    {% if session.logged_in == NULL %}
+    <div><a class='btn btn-primary mr-3' href='/signup'>Signup</a><a class='ml-3 btn btn-success' href='/login'>Login</a></div>
+    {% endif %}
 </div>
 
 {% endblock %}

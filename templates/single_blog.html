@@ -2,6 +2,10 @@
 
 {% block body %}
     
-<h1>{{id}}</h1>
+<h1 class='mt-3'>{{blog.title}}</h1>
+<hr>
+<p>{{blog.body | safe}}</p>
+<hr>
+<div class='text-left'>By: <strong>{{blog.author}}</strong> on <em>{{blog.create_date}}</em></div>
 
 {% endblock %}

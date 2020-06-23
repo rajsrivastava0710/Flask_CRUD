@@ -32,12 +32,37 @@ def about():
 #all Blogs
 @app.route('/blogs')
 def blogs():
-    return render_template('blogs.html',blogs = BLOG_DATA)
+    # Create Cursor
+    curr = mysql.connection.cursor()
+
+    #Execute
+    result = curr.execute("SELECT * FROM blogs")
+
+    blogs = curr.fetchall()
+
+    if result>0:
+        return render_template('blogs.html',blogs = blogs)
+    else:
+        flash('No articles found at the moment !','success')
+        return render_template('blogs.html',blogs=[])
+    
+    #Close Connection
+    curr.close()
 
 #Single Blog
 @app.route('/blog/<string:id>')
 def singleBlog(id):
-    return render_template('single_blog.html',id=id)
+    # Create Cursor
+    curr = mysql.connection.cursor()
+
+    #Execute
+    result = curr.execute("SELECT * FROM blogs WHERE id=%s",[id])
+
+    blog = curr.fetchone()
+
+    return render_template('single_blog.html',blog=blog)
+
+
 
 #Register form class
 class RegisterForm(Form):
@@ -140,8 +165,138 @@ def logout():
 @app.route('/dashboard')
 @is_logged_in
 def dashboard():
-    return render_template('dashboard.html')
+    # Create Cursor
+    curr = mysql.connection.cursor()
 
+    #Execute
+    result = curr.execute("SELECT * FROM blogs WHERE author=%s",[session['username']])
+
+    blogs = curr.fetchall()
+
+    if result>0:
+        return render_template('dashboard.html',blogs = blogs)
+    else:
+        flash('No Blogs found at the moment !','success')
+        return render_template('dashboard.html',blogs=[])
+    
+    #Close Connection
+    curr.close()
+
+#BlogFormClass
+class BlogForm(Form):
+    title = StringField('Title', [validators.Length(min=1, max=100),validators.DataRequired()])
+    body = TextAreaField('Body', [validators.Length(min=10),validators.DataRequired()])
+
+
+#addBlogForm
+@app.route('/dashboard/newblog',methods=['GET','POST'])
+@is_logged_in
+def newBlog():
+    form = BlogForm(request.form)
+    if request.method == 'POST' and form.validate():
+        title = form.title.data
+        body = form.body.data
+        author = session['username']
+
+        # Create Cursor
+        curr = mysql.connection.cursor()
+
+        #Execute
+        curr.execute("INSERT INTO blogs(title, body, author) VALUES(%s, %s, %s)",(title, body, author))
+
+        #Commit
+        mysql.connection.commit()
+
+        #Close Connection
+        curr.close()
+
+        flash('Your blog has been created!','success')
+
+        return redirect(url_for('dashboard'))
+
+    return render_template('new_blog_form.html',form=form)
+
+@app.route('/blog/<string:id>/edit',methods=['GET','POST'])
+@is_logged_in
+def editBlog(id):
+
+    cur = mysql.connection.cursor()
+    result = cur.execute('SELECT * FROM blogs WHERE id=%s',[id])
+    blog = cur.fetchone()
+    cur.close()
+
+    
+    
+    cur = mysql.connection.cursor()
+
+    result = cur.execute("SELECT * FROM blogs WHERE id=%s",[id])
+
+    blog = cur.fetchone()
+
+    form = BlogForm(request.form)
+
+    form.title.data = blog['title']
+    form.body.data = blog['body']
+    #ye db ka data h
+
+    cur.close()
+
+    if result>0 and blog['author'] == session['username']:
+
+        if request.method == 'POST' and form.validate():
+            title = request.form['title']
+            body = request.form['body']
+            #request.form means jo data post req ke time pass hua h
+
+            # Create Cursor
+            curr = mysql.connection.cursor()
+
+            #Execute
+            curr.execute("UPDATE blogs SET title=%s, body=%s WHERE id=%s",(title,body,id))
+
+            #Commit
+            mysql.connection.commit()
+
+            #Close Connection
+            curr.close()
+
+            flash('Your blog has been updated!','success')
+
+            return redirect(url_for('dashboard'))
+        else:
+            return render_template('edit_blog_form.html',form=form)
+
+    else:
+        flash('Invalid Request','danger')
+        return redirect(url_for('dashboard'))
+
+#delete blog
+@app.route('/blog/<string:id>/delete')
+@is_logged_in
+def deleteBlog(id):
+
+    cur = mysql.connection.cursor()
+    result = cur.execute('SELECT * FROM blogs WHERE id=%s',[id])
+    blog = cur.fetchone()
+    cur.close()
+
+    if result>0 and blog['author'] == session['username']:
+        # Create Cursor
+        curr = mysql.connection.cursor()
+
+        #Execute
+        curr.execute("DELETE FROM blogs WHERE id=%s",[id])
+
+        mysql.connection.commit()
+
+        curr.close()
+
+        flash('Blog successfully deleted','success')
+    
+    else:
+        flash('This request is invalid', 'danger')
+
+    return redirect(url_for('dashboard'))
 
 if __name__ == '__main__':
     app.secret_key = 'efew_5%&^8ndF4Q8z\c]/'
