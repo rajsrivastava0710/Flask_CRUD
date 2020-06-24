@@ -19,6 +19,27 @@ app.config['MYSQL_CURSORCLASS'] = 'DictCursor'
 #Initialize MySQL
 mysql = MySQL(app)
 
+#check user logged in
+def is_logged_in(f):
+    @wraps(f)
+    def wrap(*args, **kwargs):
+        if 'logged_in' in session:
+            return f(*args, **kwargs)
+        else:
+            flash('Unauthorised, Please Login','danger')
+            return redirect(url_for('login'))
+    return wrap
+
+def is_not_logged_in(f):
+    @wraps(f)
+    def wrap(*args, **kwargs):
+        if 'logged_in' in session:
+            return redirect(url_for('index'))
+        else:
+             return f(*args, **kwargs)
+            
+    return wrap
+
 #Index
 @app.route('/')
 def index():
@@ -51,6 +72,7 @@ def blogs():
 
 #Single Blog
 @app.route('/blog/<string:id>')
+@is_logged_in
 def singleBlog(id):
     # Create Cursor
     curr = mysql.connection.cursor()
@@ -108,6 +130,7 @@ def signup():
 
 #Login
 @app.route('/login',methods=['GET','POST'])
+@is_not_logged_in
 def login():
     if request.method == 'POST':
         #get form fields
@@ -142,19 +165,11 @@ def login():
     
     return render_template('login.html')
 
-#check user logged in
-def is_logged_in(f):
-    @wraps(f)
-    def wrap(*args, **kwargs):
-        if 'logged_in' in session:
-            return f(*args, **kwargs)
-        else:
-            flash('Unauthorised, Please Login','danger')
-            return redirect(url_for('login'))
-    return wrap
+
 
 #Logout
 @app.route('/logout')
+@is_logged_in
 def logout():
     session.clear()
     flash('Logged out successfully !','success')
